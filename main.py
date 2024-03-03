@@ -1,65 +1,34 @@
-
 import sys
 from enum import Enum
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QByteArray, QJsonValue, QUrl, QJsonDocument
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QScrollArea, \
     QLabel
-from PySide6.QtGui import QResizeEvent, QVector3D, QQuaternion
-from PySide6.Qt3DExtras import Qt3DExtras
-from PySide6.Qt3DCore import Qt3DCore
-from PySide6.Qt3DRender import Qt3DRender
+from PySide6.QtGui import QResizeEvent
+from PySide6.QtNetwork import QNetworkRequest, QNetworkAccessManager, QNetworkReply
 
 
-# noinspection PyUnresolvedReferences
-import assets.resources
-
-
-class Aircraft(Qt3DExtras.Qt3DWindow):
+class Test(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
-        # camera
-        self.camera().lens().setPerspectiveProjection(45, 16 / 9, 0.1, 1000)
-        self.camera().setPosition(QVector3D(0, 0, 40))
-        self.camera().setViewCenter(QVector3D(0, 0, 0))
+        json: dict[str, QJsonValue] = {
+            "model": "gemma",
+            "prompt": "please say 'hello world'",
+        }
+        document: QJsonDocument = QJsonDocument()
+        document.setObject(json)
+        data: QByteArray = document.toJson()
 
-        # root entity
-        root_entity = Qt3DCore.QEntity()
+        url: QUrl = QUrl("http://localhost:11434/api/generate")
+        request: QNetworkRequest = QNetworkRequest(url)
+        request.setHeader(QNetworkRequest.KnownHeaders.ContentTypeHeader, "application/json")
+        self.network_manager = QNetworkAccessManager()
+        self.network_manager.finished.connect(self.handle_response)
+        self.network_manager.post(request, data)
 
-        # material
-        material = Qt3DExtras.QPhongMaterial(root_entity)
-
-        self.setRootEntity(root_entity)
-
-        self.torusEntity = Qt3DCore.QEntity(root_entity)
-        self.torusMesh = Qt3DExtras.QTorusMesh()
-        self.torusMesh.setRadius(5)
-        self.torusMesh.setMinorRadius(1)
-        self.torusMesh.setRings(100)
-        self.torusMesh.setSlices(20)
-
-        self.torusTransform = Qt3DCore.QTransform()
-        self.torusTransform.setScale3D(QVector3D(1.5, 1, 0.5))
-        self.torusTransform.setRotation(QQuaternion.fromAxisAndAngle(QVector3D(1, 0, 0), 45))
-
-        self.torusEntity.addComponent(self.torusMesh)
-        self.torusEntity.addComponent(self.torusTransform)
-        self.torusEntity.addComponent(material)
-
-
-        # aircraft
-        entity = Qt3DCore.QEntity(root_entity)
-        mesh: Qt3DRender.QMesh = Qt3DRender.QMesh(root_entity)
-        mesh.setSource(":aircraft.obj")
-
-        transform = Qt3DCore.QTransform()
-        transform.setScale3D(QVector3D(1.5, 1, 0.5))
-        transform.setRotation(QQuaternion.fromAxisAndAngle(QVector3D(1, 0, 0), 45))
-
-        entity.addComponent(mesh)
-        entity.addComponent(transform)
-        entity.addComponent(material)
+    def handle_response(self, reply: QNetworkReply) -> None:
+        print(str(reply.readAll(), 'utf-8'))
 
 
 class Message(QWidget):
@@ -152,15 +121,16 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def resizeEvent(self, event: QResizeEvent):
-        print(self.sidebar.width(), MessageList.MINIMUM_WIDTH_DESKTOP, self.status)
         if self.sidebar.width() <= MessageList.MINIMUM_WIDTH_DESKTOP and self.status == MainWindow.Status.DESKTOP:
             self.main.hide()
             self.sidebar.setMaximumWidth(MessageList.MAXIMUM_WIDTH_MOBILE)
             self.setMaximumWidth(self.width())
             self.status = MainWindow.Status.Lock
-        elif self.status == MainWindow.Status.Lock and self.sidebar.width() < MessageList.MAXIMUM_WIDTH_MOBILE:
+            return
+        if self.status == MainWindow.Status.Lock and self.sidebar.width() < MessageList.MAXIMUM_WIDTH_MOBILE:
             self.status = MainWindow.Status.MOBILE
-        elif self.sidebar.width() >= MessageList.MAXIMUM_WIDTH_MOBILE and self.status == MainWindow.Status.MOBILE:
+            return
+        if self.sidebar.width() >= MessageList.MAXIMUM_WIDTH_MOBILE and self.status == MainWindow.Status.MOBILE:
             self.main.show()
             self.sidebar.setMaximumWidth(MessageList.MAXIMUM_WIDTH_DESKTOP)
             self.setMaximumWidth(16777215)
@@ -171,6 +141,4 @@ if __name__ == '__main__':
     application: QApplication = QApplication(sys.argv)
     main_window: MainWindow = MainWindow()
     main_window.show()
-    # aircraft: Aircraft = Aircraft()
-    # aircraft.show()
     sys.exit(application.exec())
