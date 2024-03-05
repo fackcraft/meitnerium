@@ -1,7 +1,7 @@
 \documentclass{article}
 
 \usepackage{hyperref}
-\usepackage[backend=biber]{biblatex}
+\usepackage{listings}
 
 \begin{document}
 	A Kalmia client like Kalmium with builtin AI.
@@ -12,35 +12,35 @@
 	
 	\part{Install}
 	
+	\section{Install ollama}
+		Install\footnote{\url{https://wiki.archlinux.org/title/Help:Reading\#Installation\_of\_packages}\label{install}} the ollama\footnote{\url{https://archlinux.org/packages/extra/x86_64/ollama}} package.
+	
 	\section{Install a tool for installing Python packages}
 	
 	\subsection{Conda}
 	
-	\subsubsection{Arch Linux}
+	Install\ref{install} the python-conda\footnote{\url{https://aur.archlinux.org/packages/python-conda}}\textsuperscript{AUR} package, or the miniconda3\footnote{\url{https://aur.archlinux.org/packages/miniconda3}}\textsuperscript{AUR} package.
 	
-	Install\footnote{\url{https://wiki.archlinux.org/title/Help:Reading\#Installation\_of\_packages}} one of the following packages.
+	\subsection{PIP}
+
+	Install\footnote{\url{https://wiki.archlinux.org/title/Help:Reading\#Installation\_of\_packages}} python-pip\footnote{\url{https://archlinux.org/packages/extra/any/python-pip}} package.
 	
-	\begin{enumerate}
-		\item anaconda\footnote{\url{https://github.com/archlinuxcn/repo/tree/master/archlinuxcn/anaconda}}\textsuperscript{CNRepo}
-		\item miniconda\footnote{\url{https://github.com/archlinuxcn/repo/tree/master/archlinuxcn/miniconda}}\textsuperscript{CNRepo}
-		\item python-conda\footnote{\url{https://aur.archlinux.org/packages/python-conda}}\textsuperscript{CNRepo}
-		\item miniconda3\footnote{\url{https://aur.archlinux.org/packages/miniconda3}}\textsuperscript{CNRepo}
-		\item anaconda\footnote{\url{https://aur.archlinux.org/packages/anaconda}}\textsuperscript{CNRepo}
-	\end{enumerate}
+	\section{Install Python packages}
+	
+	\subsection{Conda}
+	
+	\begin{lstlisting}
+		conda create --name fcwslib
+		conda activate fcwslib
+		conda install conda-forge::pyside6
+		conda install conda-forge::qt6-wayland
+	\end{lstlisting}
 	
 	\subsection{PIP}
 	
-	Install\footnote{\url{https://wiki.archlinux.org/title/Help:Reading\#Installation\_of\_packages}} python-pip\footnote{\url{https://archlinux.org/packages/extra/any/python-pip}} package.
-	
-	Befero using the Arch Linux CN repository.
-	
-	conda install conda-forge::pyside6
-	conda install conda-forge::qt6-wayland
-	conda install conda-forge::qt6-3d
-
-	cd assets
-	pyside6-rcc resources.qrc -o resources.py
-	
-	Move to Kalmium.
-	
+	\begin{lstlisting}
+		python -m venv fcwslib
+		source fcwslib/bin/activate.fish
+		pip install pyside6
+	\end{lstlisting}
 \end{document}
